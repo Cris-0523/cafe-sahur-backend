@@ -1,17 +1,30 @@
 from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
 
     def __str__(self):
-        return self.nombrepy
+        return self.nombre
 
 class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     precio = models.PositiveIntegerField()
-    stock = models.PositiveIntegerField()
-    imagen = models.ImageField(upload_to='/productos/', blank=True, null=True)
+    stock = models.PositiveIntegerField(default=0)
+    imagen = models.CharField(max_length=255, blank=True)
     activo = models.BooleanField(default=True)
+
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT,related_name='productos')
+
+    class Cliente(models.Model):
+        nombre = models.CharField(max_length=100)
+        email = models.EmailField(max_length=254, unique=True)
+        telefono = PhoneNumberField(blank=True)
+
+    class Pedido(models.Model):
+        fecha = models.DateTimeField(auto_now_add=True)
+        cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT,related_name='pedidos')
+        
 
 # Create your models here.

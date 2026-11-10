@@ -12,7 +12,7 @@ class Categoria(models.Model):
 class Producto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
-    precio = models.PositiveIntegerField()
+    precio = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     stock = models.PositiveIntegerField(default=0)
     imagen = models.CharField(max_length=255, blank=True)
     activo = models.BooleanField(default=True)
@@ -33,9 +33,12 @@ class Pedido(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT,related_name='pedidos')
     estado = models.CharField(max_length=20,choices=Estado.choices,default=Estado.PENDIENTE)
 
-class DetalleProducto(models.Model):
+class DetallePedido(models.Model):
      pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE,related_name='detalles')
      producto = models.ForeignKey(Producto, on_delete=models.PROTECT,related_name='detalles_pedido')
-     cantidad = models.PositiveIntegerField(validators=())
-     precio_unitario = models.PositiveIntegerField()
+     cantidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+     precio_unitario = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+     @property
+     def subtotal(self):
+          return self.precio_unitario * self.cantidad
      

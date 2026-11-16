@@ -45,3 +45,16 @@ class DetallePedidoViewSet(viewsets.ModelViewSet):
             producto.save(update_fields=['stock'])
 
             serializer.save()
+        
+    def perform_destroy(self, instance):
+        with transaction.atomic():
+            producto = Producto.objects.select_for_update().get(
+                pk=instance.producto_id
+            )
+
+            producto.stock += instance.cantidad
+            producto.save(update_fields=['stock'])
+
+            instance.delete()
+
+            

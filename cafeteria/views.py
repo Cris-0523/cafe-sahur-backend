@@ -1,4 +1,6 @@
 from rest_framework import viewsets
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
 from .models import Producto, Categoria, Cliente, Pedido, DetallePedido
 from .serializers import ProductoSerializer, CategoriaSerializer, ClienteSerializer, PedidoSerializer, DetallePedidoSerializer
 
@@ -21,3 +23,25 @@ class PedidoViewSet(viewsets.ModelViewSet):
 class DetallePedidoViewSet(viewsets.ModelViewSet):
     queryset = DetallePedido.objects.all()
     serializer_class = DetallePedidoSerializer
+
+class DetallePedidoViewSet(viewsets.ModelViewSet):
+    queryset = DetallePedido.objects.all()
+    serializer_class = DetallePedidoSerializer
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            producto = Producto.objects.select_for_update().get(
+                pk=serializer.validated_data['producto'].pk
+            )
+
+            cantidad = serializer.validated_data['cantidad']
+
+            if producto.stock < cantidad:
+                raise ValidationError({
+                    'cantidad': f'Stock insuficiente. Disponible: {producto.stock}'
+                })
+
+            producto.stock -= cantidad
+            producto.save(update_fields=['stock'])
+
+            serializer.save()
